@@ -12,21 +12,35 @@ function App() {
   const [filterCategory, setFilterCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   
+  const [liveTrends, setLiveTrends] = useState([]);
   const [selectedTrend, setSelectedTrend] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 800);
-    return () => clearTimeout(timer);
+    setIsLoading(true);
+    fetch('/api/discover')
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          setLiveTrends(data);
+        }
+      })
+      .catch(err => console.error("Could not fetch live trends:", err))
+      .finally(() => setIsLoading(false));
   }, []);
+
+  const combinedTrends = useMemo(() => {
+    // Les vraies tendances live s'affichent en premier, suivies de nos exemples
+    return [...liveTrends, ...mockTrends];
+  }, [liveTrends]);
 
   const categories = useMemo(() => {
-    const cats = new Set(mockTrends.map(t => t.category));
+    const cats = new Set(combinedTrends.map(t => t.category));
     return ['all', ...Array.from(cats)].sort();
-  }, []);
+  }, [combinedTrends]);
 
   const filteredTrends = useMemo(() => {
-    return mockTrends.filter(t => {
+    return combinedTrends.filter(t => {
       // Logique existante...
       let matchStatus = false;
       
