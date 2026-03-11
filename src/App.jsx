@@ -19,13 +19,21 @@ function App() {
   useEffect(() => {
     setIsLoading(true);
     fetch('/api/discover')
-      .then(res => res.json())
+      .then(res => {
+         // Si Vercel renvoie une erreur (ex: limite atteinte), on gère
+         if (!res.ok) throw new Error("API Server error");
+         return res.json();
+      })
       .then(data => {
         if (Array.isArray(data) && data.length > 0) {
           setLiveTrends(data);
+        } else {
+          console.warn("L'API Google a bloqué la requête (HTML retourné, Rate Limit). Fallback sur les mocks locaux seuls.");
         }
       })
-      .catch(err => console.error("Could not fetch live trends:", err))
+      .catch(err => {
+         console.warn("Fallback local activé, serveur Vercel injoignable ou bloqué par Google :", err);
+      })
       .finally(() => setIsLoading(false));
   }, []);
 

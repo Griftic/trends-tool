@@ -18,8 +18,21 @@ export default async function handler(req, res) {
 
     // L'API Google Trends va chercher les requêtes fortement associées (Rising/Top) au seed actuel
     const relatedResults = await googleTrends.relatedQueries({ keyword: randomSeed });
+    
+    // Sécurité: vérifier si Google nous bloque temporairement (renvoie du HTML au lieu de JSON)
+    if (relatedResults.startsWith('<')) {
+        console.warn("L'API Google a renvoyé du HTML au lieu du JSON. Possible Rate Limiting.");
+        return res.status(200).json([]); // On renvoie un tableau vide plutôt que de crasher l'app React
+    }
+
     const parsedRelated = JSON.parse(relatedResults);
     
+    // Vérification de la structure avant d'accéder aux propriétés
+    if (!parsedRelated || !parsedRelated.default || !parsedRelated.default.rankedList) {
+        console.warn("Structure inattendue depuis Google Trends :", parsedRelated);
+        return res.status(200).json([]);
+    }
+
     // RankedList[1] concerne généralement les tendances "Rising" (en ascension).
     const risingList = parsedRelated.default.rankedList.find(list => 
       list.rankedKeyword && 
@@ -46,10 +59,21 @@ export default async function handler(req, res) {
           startTime: new Date(Date.now() - (365 * 24 * 60 * 60 * 1000 * 5)) 
         });
         
+        // Sécurité Rate Limiting pour le 2nd appel
+        if (historyResults.startsWith('<')) {
+            console.warn(`L'API a bloqué (HTML) lors de l'historique de ${keyword}`);
+            continue;
+        }
+
         const parsedHistory = JSON.parse(historyResults);
+        
+        if (!parsedHistory || !parsedHistory.default || !parsedHistory.default.timelineData) {
+            continue;
+        }
+
         const timelineData = parsedHistory.default.timelineData;
         
-        if (!timelineData || timelineData.length === 0) continue;
+        if (timelineData.length === 0) continue;
 
         const history = timelineData.map(data => data.value[0] || 0); // Score Google (0-100)
         
