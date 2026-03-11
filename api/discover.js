@@ -1,4 +1,5 @@
-import { parseStringPromise } from 'xml2js';
+import xml2js from 'xml2js';
+const { parseStringPromise } = xml2js;
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Credentials', true);
