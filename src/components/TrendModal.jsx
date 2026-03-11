@@ -1,14 +1,17 @@
 import React from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { X, TrendingUp, TrendingDown, Minus, Activity } from 'lucide-react';
+import { useLanguage } from '../i18n';
+import GoogleTrends from './GoogleTrends';
 import './TrendModal.css';
 
 export default function TrendModal({ trend, onClose }) {
+  const { t, tCat } = useLanguage();
+
   if (!trend) return null;
 
-  // Préparation des données pour Recharts (format objet {name, value})
   const chartData = trend.history.map((val, index) => ({
-    month: `Month ${index + 1}`,
+    month: `M${index + 1}`,
     value: val
   }));
 
@@ -26,7 +29,6 @@ export default function TrendModal({ trend, onClose }) {
   const statusColor = getStatusColor(trend.status);
   const chartColor = isPositiveInfo ? '#10b981' : '#ef4444';
 
-  // Prevent background scrolling when modal is open
   React.useEffect(() => {
     document.body.style.overflow = 'hidden';
     return () => { document.body.style.overflow = 'unset'; };
@@ -41,7 +43,7 @@ export default function TrendModal({ trend, onClose }) {
 
         <div className="modal-header">
           <div className="modal-badges">
-            <span className="badge category-badge">{trend.category}</span>
+            <span className="badge category-badge">{tCat(trend.category)}</span>
             <span 
               className="badge status-badge"
               style={{ 
@@ -51,7 +53,7 @@ export default function TrendModal({ trend, onClose }) {
               }}
             >
               {getStatusIcon(trend.status)}
-              {trend.status.toUpperCase()}
+              {t(trend.status).toUpperCase()}
             </span>
           </div>
           <h2>{trend.keyword}</h2>
@@ -60,11 +62,11 @@ export default function TrendModal({ trend, onClose }) {
 
         <div className="modal-stats-grid">
           <div className="stat-box">
-            <span className="stat-label">Search Volume</span>
+            <span className="stat-label">{t('searchVolume')}</span>
             <span className="stat-value">{trend.volume}</span>
           </div>
           <div className="stat-box">
-            <span className="stat-label">Growth (5yr)</span>
+            <span className="stat-label">{t('growth')}</span>
             <span className={`stat-value ${isPositiveInfo ? 'text-up' : 'text-down'}`}>
               {isPositiveInfo ? '+' : ''}{trend.growth}%
             </span>
@@ -72,7 +74,7 @@ export default function TrendModal({ trend, onClose }) {
         </div>
 
         <div className="modal-chart-section">
-          <h3>Interest Over Time</h3>
+          <h3>{t('interestOverTime')}</h3>
           <div className="chart-wrapper">
             <ResponsiveContainer width="100%" height={300}>
               <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -94,17 +96,23 @@ export default function TrendModal({ trend, onClose }) {
             </ResponsiveContainer>
           </div>
         </div>
+
+        {/* NOUVEAUTÉ : Widget Live Google Trends */}
+        <div className="modal-chart-section" style={{ marginTop: '2.5rem' }}>
+          <h3>{t('googleTrendsLive')}</h3>
+          <GoogleTrends keyword={trend.keyword} />
+        </div>
+
       </div>
     </div>
   );
 }
 
-// Utilitaire pour la couleur
 function getStatusColor(status) {
   switch(status) {
-    case 'exploding': return '#ec4899'; // secondary
-    case 'growing': return '#10b981'; // up
-    case 'declining': return '#ef4444'; // down
-    default: return '#64748b'; // neutral
+    case 'exploding': return '#ec4899';
+    case 'growing': return '#10b981';
+    case 'declining': return '#ef4444';
+    default: return '#64748b';
   }
 }

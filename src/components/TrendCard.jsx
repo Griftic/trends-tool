@@ -1,17 +1,17 @@
 import React from 'react';
+import { useLanguage } from '../i18n';
 import './TrendCard.css';
 
 export default function TrendCard({ trend }) {
+  const { t, tCat } = useLanguage();
   const isPositiveInfo = trend.growth >= 0;
   
-  // Fonction utilitaire simple pour dessiner une ligne SVG (Sparkline basique)
   const drawSparkline = (data) => {
     if (!data || data.length === 0) return '';
     const max = Math.max(...data);
     const min = Math.min(...data);
     const range = max - min || 1;
     
-    // Normaliser sur une hauteur de 40px et largeur de 100%
     const points = data.map((val, i) => {
       const x = (i / (data.length - 1)) * 100;
       const y = 40 - ((val - min) / range) * 40;
@@ -35,7 +35,7 @@ export default function TrendCard({ trend }) {
   return (
     <div className="glass-panel trend-card animate-fade-in">
       <div className="trend-header">
-        <span className="trend-category">{trend.category}</span>
+        <span className="trend-category">{tCat(trend.category)}</span>
         <div 
           className="trend-status-badge" 
           style={{ 
@@ -44,7 +44,7 @@ export default function TrendCard({ trend }) {
             border: `1px solid ${getStatusColor(trend.status)}50`
           }}
         >
-          {trend.status.toUpperCase()}
+          {t(trend.status).toUpperCase()}
         </div>
       </div>
       
@@ -53,11 +53,11 @@ export default function TrendCard({ trend }) {
       
       <div className="trend-metrics">
         <div className="metric">
-          <span className="metric-label">Search Volume</span>
+          <span className="metric-label">{t('searchVolume')}</span>
           <span className="metric-value">{trend.volume}</span>
         </div>
         <div className="metric">
-          <span className="metric-label">Growth (5yr)</span>
+          <span className="metric-label">{t('growth')}</span>
           <span className={`metric-value ${isPositiveInfo ? 'positive' : 'negative'}`}>
             {isPositiveInfo ? '+' : ''}{trend.growth}%
           </span>
@@ -66,7 +66,6 @@ export default function TrendCard({ trend }) {
       
       <div className="trend-chart">
         <svg viewBox="0 0 100 45" preserveAspectRatio="none" className="sparkline-svg">
-          {/* Gradient for fill */}
           <defs>
             <linearGradient id={`grad-${trend.id}`} x1="0" x2="0" y1="0" y2="1">
               <stop offset="0%" stopColor={sparklineColor} stopOpacity="0.4" />

@@ -1,6 +1,8 @@
 export const mockTrends = [
   // Tech & AI
   { id: '1', keyword: 'AI Video Generators', category: 'Technology', growth: 425, volume: '2.4M', status: 'exploding', description: 'Tools converting text or images to video using generative AI models.', history: [20, 35, 45, 80, 150, 320, 500, 800, 1200, 1800, 2200, 2400] },
+  { id: '25', keyword: 'DeepSeek AI', category: 'Technology', growth: 2500, volume: '8.5M', status: 'exploding', description: 'Open-weight AI models matching top commercial performance.', history: [100, 150, 300, 800, 950, 1100, 2500, 5000, 8000, 12000, 15000, 25000] }, // <1k to >10k
+  { id: '26', keyword: 'Suno Audio', category: 'Technology', growth: 1800, volume: '3.2M', status: 'exploding', description: 'AI music generation from text prompts going viral.', history: [50, 120, 200, 450, 800, 950, 3000, 6000, 9000, 11500, 14000, 18000] }, // <1k to >10k
   { id: '4', keyword: 'Agentic Workflows', category: 'Technology', growth: 512, volume: '420K', status: 'exploding', description: 'Autonomous AI systems capable of executing multi-step tasks independently.', history: [5, 10, 15, 25, 40, 70, 120, 200, 280, 340, 390, 420] },
   { id: '8', keyword: 'Vector Databases', category: 'Technology', growth: 195, volume: '780K', status: 'growing', description: 'Databases optimized for storing and querying high-dimensional vectors, crucial for LLMs.', history: [80, 100, 150, 220, 300, 400, 480, 550, 620, 680, 740, 780] },
   { id: '11', keyword: 'Small Language Models', category: 'Technology', growth: 340, volume: '550K', status: 'exploding', description: 'Compact AI models (SLMs) designed to run locally on devices with less compute power.', history: [10, 15, 25, 50, 90, 150, 250, 350, 420, 480, 520, 550] },

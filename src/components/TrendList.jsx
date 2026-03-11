@@ -1,10 +1,13 @@
 import React from 'react';
 import TrendCard from './TrendCard';
+import { useLanguage } from '../i18n';
 import './TrendList.css';
 
 export default function TrendList({ trends, onTrendClick }) {
+  const { t } = useLanguage();
+
   if (!trends || trends.length === 0) {
-    return <div className="no-trends">No trends found matching your criteria.</div>;
+    return <div className="no-trends">{t('noTrends')}</div>;
   }
 
   return (
