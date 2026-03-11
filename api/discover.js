@@ -1,6 +1,3 @@
-import xml2js from 'xml2js';
-const { parseStringPromise } = xml2js;
-
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -12,18 +9,21 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Appel au flux RSS de Google Trends (Geo = US par défaut pour plus de volume d'exemples tech)
-    // Ce flux ne bloque quasiment jamais les IPs de type "Serverless" car il est fait pour l'agrégation
+    // Appel au flux RSS de Google Trends
     const response = await fetch('https://trends.google.com/trending/rss?geo=US');
     if (!response.ok) {
         throw new Error(`Google RSS Fetch failed: ${response.statusText}`);
     }
     
     const xmlText = await response.text();
-    const result = await parseStringPromise(xmlText);
     
-    // Le flux JSON/Object généré par xml2js
-    const items = result?.rss?.channel?.[0]?.item || [];
+    // Extraction manuelle via Regex pour éviter tout crash de dépendance (ex: xml2js) sur Vercel Serverless
+    const itemsRegex = /<item>(.*?)<\/item>/gs;
+    let match;
+    const items = [];
+    while ((match = itemsRegex.exec(xmlText)) !== null) {
+        items.push(match[1]);
+    }
     
     if (items.length === 0) {
       return res.status(200).json([]);
@@ -33,18 +33,24 @@ export default async function handler(req, res) {
 
     // On parcourt les éléments du flux RSS (généralement 20 top sujets de la journée)
     for (let i = 0; i < Math.min(items.length, 10); i++) {
-        const item = items[i];
+        const itemHtml = items[i];
         
-        // Extraction des valeurs spécifiques au format RSS Google
-        const keyword = item.title?.[0] || 'Unknown';
+        // Extraction des valeurs avec Regex
+        const titleMatch = itemHtml.match(/<title>(.*?)<\/title>/);
+        const keyword = titleMatch ? titleMatch[1] : 'Unknown';
         
-        // Ex: "50,000+" ou "100,000+"
-        let trafficStr = item['ht:approx_traffic']?.[0] || '1K+';
+        // Ex: "<ht:approx_traffic>50,000+</ht:approx_traffic>"
+        const trafficMatch = itemHtml.match(/<ht:approx_traffic>(.*?)<\/ht:approx_traffic>/);
+        let trafficStr = trafficMatch ? trafficMatch[1] : '1K+';
+        
         // Nettoyage de la virgule pour la cohérence ('50,000+' -> '50K')
         trafficStr = trafficStr.replace(/,/g, '').replace(/\+/g, '');
         const trafficNum = parseInt(trafficStr, 10) || 1000;
         
         const finalVolumeStr = trafficNum >= 1000 ? `${(trafficNum/1000).toFixed(0)}K` : trafficStr;
+
+        const descMatch = itemHtml.match(/<description><!\[CDATA\[(.*?)\]\]><\/description>/) || itemHtml.match(/<description>(.*?)<\/description>/);
+        const description = descMatch && descMatch[1] ? descMatch[1] : `Sujet actuellement en tendance majeure sur Google.`;
 
         // On simule une courbe "Exploding" puisque ce sont stricto sensu les top trends du jour
         // On génère 12 points pour le graphique des 12 derniers mois
@@ -76,7 +82,7 @@ export default async function handler(req, res) {
             growth: growth,
             volume: finalVolumeStr,
             status: 'exploding', // Par définition, le flux RSS ne donne que des sujets en explosion
-            description: item.description?.[0] || `Sujet actuellement en tendance majeure sur Google.`,
+            description: description,
             history: simulatedHistory
         });
     }
